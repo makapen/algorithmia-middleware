@@ -6,6 +6,7 @@ cors = require('cors');
 
 var routes = require('./routes/index');
 var sentimentRoute = require('./routes/sentiment');
+var redditRoute = require('./routes/reddit');
 
 var app = express();
 
@@ -25,6 +26,7 @@ app.set('view engine', null);
 
 app.use('/', routes);
 app.use('/sentiment', sentimentRoute);
+app.use('/reddit', redditRoute);
 
 /// catch 404 and forward to error handler
 app.use(function(req, res, next) {
@@ -39,7 +41,6 @@ app.use(function(req, res, next) {
 // will print stacktrace
 
 if (app.get('env') === 'development') {
-
     app.use(function(err, req, res, next) {
         res.status(err.status || 500);
         res.send({
