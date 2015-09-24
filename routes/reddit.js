@@ -4,6 +4,7 @@ var request = require('request');
 var async = require('async');
 var Algorithmia = require('algorithmia');
 var htmlToText = require('html-to-text');
+var _ = require('underscore');
 
 var getSentimentAnalysis = function(message, cb) {
   Algorithmia(process.env.algorithmiaKey)
@@ -27,63 +28,64 @@ var getRedditFeed = function(cb) {
         return cb(response.error);
       }
       var descriptions = response.result.map(function(item) {
-        return item.description;
+        return {
+          description: item.description,
+          title: item.title,
+          url: item.url
+        }
       })
       cb(null, descriptions);
     });
 };
 
 router.get('/', function(req, res, next) {
-  var timesCalled = 0;
+  var resultsWithSentiment = [];
 
+  //
+  var q = async.queue(function(task, callback) {
+    var parsedText = task.parsedText;
+    var timedOut = false;
+
+    var activeTimeout = setTimeout(function() {
+      timedOut = true;
+      resultsWithSentiment.push(_.extend({}, task, {
+        sentimentScore: 1
+      }));
+      callback();
+    }, 1500);
+    getSentimentAnalysis(parsedText, function(err, sentimentScore) {
+      if (err) return callback(err);
+      if (timedOut) {
+        return;
+      }
+
+      resultsWithSentiment.push(_.extend({}, task, {
+        sentimentScore: sentimentScore
+      }));
+      clearTimeout(activeTimeout);
+      callback();
+    });
+  }, 14);
+
+  // assign a callback
+  q.drain = function() {
+    res.status(200).send(resultsWithSentiment);
+    q.kill();
+  }
+
+  //now go and fetch reddit and start pushing in queue tasks
   getRedditFeed(function(err, result) {
     if (err) {
       return next(err);
     }
-    var resultsWithSentiment = [];
-
-    var q = async.queue(function(task, callback) {
-      var parsedText = task.parsedText;
-      var timedOut = false;
-
-      var activeTimeout = setTimeout(function() {
-        timedOut = true;
-        callback({
-          parsedText: task.parsedText,
-          rawHtml: task.rawHtml
-        });
-      }, 1500);
-      getSentimentAnalysis(parsedText, function(err, sentimentScore) {
-        if (err) return callback(err);
-        if (timedOut) {
-          return;
-        }
-
-        resultsWithSentiment.push({
-          parsedText: task.parsedText,
-          rawHtml: task.rawHtml,
-          sentimentScore: sentimentScore
-        });
-        clearTimeout(activeTimeout);
-        callback();
-      });
-    }, 14);
-
-
-    // assign a callback
-    q.drain = function() {
-      res.status(200).send(resultsWithSentiment);
-      q.kill();
-    }
 
     // add some items to the queue
-    var parsedResult = result.map(function(descriptionItem) {
-      var parsedText = htmlToText.fromString(descriptionItem);
+    var parsedResult = result.map(function(redditItem) {
+      var parsedText = htmlToText.fromString(redditItem.description);
       parsedText = parsedText.slice(0, 200);//first 200 words
-      return {
-        rawHtml: descriptionItem,
+      return _.extend({}, redditItem, {
         parsedText: parsedText
-      };
+      });
     });
 
     q.push(parsedResult);
