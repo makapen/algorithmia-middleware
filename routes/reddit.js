@@ -42,30 +42,30 @@ router.get('/', function(req, res, next) {
   var resultsWithSentiment = [];
 
   //
-  // var q = async.queue(function(task, callback) {
-  //   var parsedText = task.parsedText;
-  //   var timedOut = false;
-  //
-  //   var activeTimeout = setTimeout(function() {
-  //     timedOut = true;
-  //     resultsWithSentiment.push(_.extend({}, task, {
-  //       sentimentScore: 1
-  //     }));
-  //     callback();
-  //   }, 1500);
-  //   getSentimentAnalysis(parsedText, function(err, sentimentScore) {
-  //     if (err) return callback(err);
-  //     if (timedOut) {
-  //       return;
-  //     }
-  //
-  //     resultsWithSentiment.push(_.extend({}, task, {
-  //       sentimentScore: sentimentScore
-  //     }));
-  //     clearTimeout(activeTimeout);
-  //     callback();
-  //   });
-  // }, 8);
+  var q = async.queue(function(task, callback) {
+    var parsedText = task.parsedText;
+    var timedOut = false;
+
+    var activeTimeout = setTimeout(function() {
+      timedOut = true;
+      resultsWithSentiment.push(_.extend({}, task, {
+        sentimentScore: 1
+      }));
+      callback();
+    }, 1500);
+    getSentimentAnalysis(parsedText, function(err, sentimentScore) {
+      if (err) return callback(err);
+      if (timedOut) {
+        return;
+      }
+
+      resultsWithSentiment.push(_.extend({}, task, {
+        sentimentScore: sentimentScore
+      }));
+      clearTimeout(activeTimeout);
+      callback();
+    });
+  }, 14);
 
   // assign a callback
   q.drain = function() {
@@ -76,7 +76,6 @@ router.get('/', function(req, res, next) {
   //now go and fetch reddit and start pushing in queue tasks
   getRedditFeed(function(err, result) {
     if (err) {
-      err.message = 'Reddit Fetch: ' + err.message;
       return next(err);
     }
 
