@@ -65,7 +65,7 @@ router.get('/', function(req, res, next) {
       clearTimeout(activeTimeout);
       callback();
     });
-  }, 14);
+  }, 8);
 
   // assign a callback
   q.drain = function() {
@@ -76,6 +76,7 @@ router.get('/', function(req, res, next) {
   //now go and fetch reddit and start pushing in queue tasks
   getRedditFeed(function(err, result) {
     if (err) {
+      err.message = 'Reddit Fetch: ' + err.message;
       return next(err);
     }
 
