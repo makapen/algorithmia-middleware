@@ -21,7 +21,7 @@ var getSentimentAnalysis = function(message, cb) {
 var getRedditFeed = function(cb) {
   var input = "https://www.reddit.com/r/concrete.rss";
   Algorithmia(process.env.algorithmiaKey)
-    .algo("algo://tags/ScrapeRSS/0.1.2")
+    .algo("algo://tags/ScrapeRSS/0.1.5")
     .pipe(input)
     .then(function(response) {
       if (response.error) {
