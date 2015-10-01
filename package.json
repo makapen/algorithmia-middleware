@@ -1,5 +1,5 @@
 {
-  "name": "social-network-middleware",
+  "name": "algorithmia-middleware",
   "version": "1.0.0",
   "description": "",
   "main": "app.js",
@@ -9,14 +9,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/makapen/social-network-middleware.git"
+    "url": "git+https://github.com/makapen/algorithmia-middleware.git"
   },
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/makapen/social-network-middleware/issues"
+    "url": "https://github.com/makapen/algorithmia-middleware/issues"
   },
-  "homepage": "https://github.com/makapen/social-network-middleware#readme",
+  "homepage": "https://github.com/makapen/algorithmia-middleware#readme",
   "private": true,
   "engines": {
     "node": "0.12.x"
